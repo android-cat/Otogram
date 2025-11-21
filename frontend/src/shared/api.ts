@@ -1,7 +1,9 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'
+import { API_BASE_URL } from './config'
 
-export async function fetchJson<T>(endpoint: string) {
-    const res = await fetch(`${API_BASE}${endpoint}`)
+export async function fetchJson<T>(endpoint: string, credentials: RequestCredentials = 'include') {
+    const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+        credentials,
+    })
     if (!res.ok) {
         throw new Error(`Request failed: ${res.status}`)
     }

@@ -22,7 +22,7 @@ func SearchPosts(w http.ResponseWriter, r *http.Request) {
 	// Search in comment, title, or tags
 	sqlQuery := `
 		SELECT p.id, p.user_id, p.title, p.song_id, p.song_type, p.comment, p.tags, p.created_at,
-		       u.id, u.display_name, u.profile_image
+		       u.id, u.display_name, u.profile_image, u.bio
 		FROM posts p
 		LEFT JOIN users u ON p.user_id = u.id
 		WHERE p.comment ILIKE '%' || $1 || '%' 
@@ -42,7 +42,7 @@ func SearchPosts(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var p models.Post
 		var u models.User
-		err := rows.Scan(&p.ID, &p.UserID, &p.Title, &p.SongID, &p.SongType, &p.Comment, &p.Tags, &p.CreatedAt, &u.ID, &u.DisplayName, &u.ProfileImage)
+		err := rows.Scan(&p.ID, &p.UserID, &p.Title, &p.SongID, &p.SongType, &p.Comment, &p.Tags, &p.CreatedAt, &u.ID, &u.DisplayName, &u.ProfileImage, &u.Bio)
 		if err != nil {
 			log.Println("Error scanning row:", err)
 			continue
@@ -67,13 +67,13 @@ func SearchUsers(w http.ResponseWriter, r *http.Request) {
 
 	if query == "" {
 		rows, err = database.DB.Query(`
-			SELECT id, spotify_id, display_name, profile_image, created_at
+			SELECT id, oauth_id, display_name, profile_image, bio, created_at
 			FROM users
 			ORDER BY display_name ASC
 		`)
 	} else {
 		rows, err = database.DB.Query(`
-			SELECT id, spotify_id, display_name, profile_image, created_at
+			SELECT id, oauth_id, display_name, profile_image, bio, created_at
 			FROM users
 			WHERE display_name ILIKE '%' || $1 || '%'
 			ORDER BY created_at DESC
@@ -88,7 +88,7 @@ func SearchUsers(w http.ResponseWriter, r *http.Request) {
 	var users []models.User
 	for rows.Next() {
 		var u models.User
-		err := rows.Scan(&u.ID, &u.SpotifyID, &u.DisplayName, &u.ProfileImage, &u.CreatedAt)
+		err := rows.Scan(&u.ID, &u.OAuthID, &u.DisplayName, &u.ProfileImage, &u.Bio, &u.CreatedAt)
 		if err != nil {
 			log.Println("Error scanning row:", err)
 			continue

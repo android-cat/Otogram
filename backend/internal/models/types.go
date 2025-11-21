@@ -7,11 +7,13 @@ import (
 )
 
 type User struct {
-	ID           int       `json:"id"`
-	SpotifyID    string    `json:"spotify_id"`
-	DisplayName  string    `json:"display_name"`
-	ProfileImage string    `json:"profile_image"`
-	CreatedAt    time.Time `json:"created_at"`
+	ID            int       `json:"id"`
+	OAuthID       string    `json:"oauth_id"`
+	OAuthProvider string    `json:"oauth_provider"`
+	DisplayName   string    `json:"display_name"`
+	ProfileImage  string    `json:"profile_image"`
+	Bio           string    `json:"bio"`
+	CreatedAt     time.Time `json:"created_at"`
 }
 
 type Post struct {

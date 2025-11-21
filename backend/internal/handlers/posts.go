@@ -16,7 +16,7 @@ func GetPosts(w http.ResponseWriter, r *http.Request) {
 
 	baseQuery := `
 		SELECT p.id, p.user_id, p.title, p.song_id, p.song_type, p.comment, p.tags, p.created_at,
-		       u.id, u.display_name, u.profile_image
+		       u.id, u.display_name, u.profile_image, u.bio
 		FROM posts p
 		LEFT JOIN users u ON p.user_id = u.id
 	`
@@ -47,7 +47,7 @@ func GetPosts(w http.ResponseWriter, r *http.Request) {
 		var p models.Post
 		var u models.User
 		
-		err := rows.Scan(&p.ID, &p.UserID, &p.Title, &p.SongID, &p.SongType, &p.Comment, &p.Tags, &p.CreatedAt, &u.ID, &u.DisplayName, &u.ProfileImage)
+		err := rows.Scan(&p.ID, &p.UserID, &p.Title, &p.SongID, &p.SongType, &p.Comment, &p.Tags, &p.CreatedAt, &u.ID, &u.DisplayName, &u.ProfileImage, &u.Bio)
 		if err != nil {
 			log.Println("Error scanning row:", err)
 			continue

@@ -2,6 +2,7 @@ export interface User {
     id: number;
     display_name: string;
     profile_image: string;
+    bio?: string;
 }
 
 export interface Post {
