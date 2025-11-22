@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useAuth } from '@/shared/contexts/AuthContext';
 import { Post } from '@/shared/types';
 import { PostCard } from '@/entities/post/ui/PostCard';
 import { CreatePostForm } from '@/features/create-post/ui/CreatePostForm';
@@ -12,6 +13,8 @@ export default function Home() {
     const [searchQuery, setSearchQuery] = useState('');
     const [loading, setLoading] = useState(true);
     const [isFormOpen, setIsFormOpen] = useState(false);
+
+    const { currentUser } = useAuth();
 
     const fetchPosts = async (query: string = '') => {
         setLoading(true);
@@ -64,10 +67,14 @@ export default function Home() {
                 <div className="w-full mb-8">
                     {!isFormOpen ? (
                         <button
-                            onClick={() => setIsFormOpen(true)}
-                            className="w-full py-3 bg-gradient-brand text-white font-bold rounded-xl transition shadow-lg hover:opacity-90"
+                            onClick={() => currentUser ? setIsFormOpen(true) : null}
+                            disabled={!currentUser}
+                            className={`w-full py-3 font-bold rounded-xl transition shadow-lg ${currentUser
+                                ? 'bg-gradient-brand text-white hover:opacity-90'
+                                : 'bg-gray-300 text-gray-500 cursor-not-allowed dark:bg-zinc-800 dark:text-zinc-500'
+                                }`}
                         >
-                            + Share a Song
+                            {currentUser ? '+ Share a Song' : 'Login to Share a Song'}
                         </button>
                     ) : (
                         <CreatePostForm
