@@ -7,6 +7,7 @@ import { Post } from '@/shared/types';
 import { PostCard } from '@/entities/post/ui/PostCard';
 import { CreatePostForm } from '@/features/create-post/ui/CreatePostForm';
 import { SearchBar } from '@/features/search-post/ui/SearchBar';
+import { API_BASE_URL } from '@/shared/config';
 
 export default function Home() {
     const [posts, setPosts] = useState<Post[]>([]);
@@ -20,10 +21,12 @@ export default function Home() {
         setLoading(true);
         try {
             const endpoint = query
-                ? `http://localhost:8080/api/search/posts?q=${encodeURIComponent(query)}`
-                : 'http://localhost:8080/api/posts';
+                ? `${API_BASE_URL}/api/search/posts?q=${encodeURIComponent(query)}`
+                : `${API_BASE_URL}/api/posts`;
 
-            const res = await fetch(endpoint);
+            const res = await fetch(endpoint, {
+                credentials: 'include'
+            });
             if (!res.ok) throw new Error('Failed to fetch');
             const data = await res.json();
             setPosts(data || []);

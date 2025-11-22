@@ -16,12 +16,14 @@ import (
 func GetPosts(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	// Get current user ID if logged in (use NULL-safe value)
-	var currentUserID *int
+	// Get current user ID if logged in
+	var currentUserID int
+	var isLoggedIn bool
 	session, err := auth.Store.Get(r, auth.GetSessionCookieName())
 	if err == nil {
 		if id, ok := session.Values["user_id"].(int); ok {
-			currentUserID = &id
+			currentUserID = id
+			isLoggedIn = true
 		}
 	}
 
@@ -30,7 +32,7 @@ func GetPosts(w http.ResponseWriter, r *http.Request) {
 		       u.id, u.display_name, u.profile_image, u.bio,
 		       COALESCE((SELECT COUNT(*) FROM likes l WHERE l.post_id = p.id), 0) as like_count,
 		       COALESCE((SELECT COUNT(*) FROM replies r WHERE r.post_id = p.id), 0) as reply_count,
-		       COALESCE((SELECT EXISTS(SELECT 1 FROM likes l WHERE l.post_id = p.id AND l.user_id = $1)), false) as liked_by_current_user
+		       CASE WHEN $1 > 0 THEN COALESCE((SELECT EXISTS(SELECT 1 FROM likes l WHERE l.post_id = p.id AND l.user_id = $1)), false) ELSE false END as liked_by_current_user
 		FROM posts p
 		LEFT JOIN users u ON p.user_id = u.id
 	`
@@ -45,9 +47,17 @@ func GetPosts(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		rows, err = database.DB.Query(baseQuery+" WHERE p.user_id = $2 ORDER BY p.created_at DESC", currentUserID, userID)
+		if isLoggedIn {
+			rows, err = database.DB.Query(baseQuery+" WHERE p.user_id = $2 ORDER BY p.created_at DESC", currentUserID, userID)
+		} else {
+			rows, err = database.DB.Query(baseQuery+" WHERE p.user_id = $2 ORDER BY p.created_at DESC", 0, userID)
+		}
 	} else {
-		rows, err = database.DB.Query(baseQuery+" ORDER BY p.created_at DESC", currentUserID)
+		if isLoggedIn {
+			rows, err = database.DB.Query(baseQuery+" ORDER BY p.created_at DESC", currentUserID)
+		} else {
+			rows, err = database.DB.Query(baseQuery+" ORDER BY p.created_at DESC", 0)
+		}
 	}
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
