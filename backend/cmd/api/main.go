@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	"backend/internal/auth"
 	"backend/internal/database"
@@ -85,6 +86,21 @@ func main() {
 			handlers.CreatePost(w, r)
 		} else {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	}))
+
+	http.HandleFunc("/api/posts/", enableCORS(func(w http.ResponseWriter, r *http.Request) {
+		// Dispatch based on path suffix
+		// Expected: /api/posts/{id}/like, /api/posts/{id}/reply, /api/posts/{id}/replies
+		path := r.URL.Path
+		if strings.HasSuffix(path, "/like") && r.Method == "POST" {
+			handlers.ToggleLike(w, r)
+		} else if strings.HasSuffix(path, "/reply") && r.Method == "POST" {
+			handlers.CreateReply(w, r)
+		} else if strings.HasSuffix(path, "/replies") && r.Method == "GET" {
+			handlers.GetReplies(w, r)
+		} else {
+			http.NotFound(w, r)
 		}
 	}))
 

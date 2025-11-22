@@ -14,4 +14,16 @@ export interface Post {
     tags: string[];
     created_at: string;
     user?: User;
+    like_count: number;
+    reply_count: number;
+    liked_by_current_user: boolean;
+}
+
+export interface Reply {
+    id: number;
+    user_id: number;
+    post_id: number;
+    content: string;
+    created_at: string;
+    user?: User;
 }
