@@ -4,76 +4,13 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"strings"
 
 	"backend/internal/auth"
 	"backend/internal/database"
 	"backend/internal/handlers"
+	"backend/internal/middleware"
 )
-
-func enableCORS(next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		origin := os.Getenv("FRONTEND_URL")
-		if origin == "" {
-			origin = "http://127.0.0.1:3000"
-		}
-		
-		w.Header().Set("Access-Control-Allow-Origin", origin)
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-		w.Header().Set("Access-Control-Allow-Credentials", "true")
-
-		if r.Method == "OPTIONS" {
-			w.WriteHeader(http.StatusOK)
-			return
-		}
-
-		next(w, r)
-	}
-}
-
-func enableCORSForFileServer(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		origin := os.Getenv("FRONTEND_URL")
-		if origin == "" {
-			origin = "http://127.0.0.1:3000"
-		}
-		
-		w.Header().Set("Access-Control-Allow-Origin", origin)
-		w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-		w.Header().Set("Access-Control-Allow-Credentials", "true")
-
-		if r.Method == "OPTIONS" {
-			w.WriteHeader(http.StatusOK)
-			return
-		}
-
-		next.ServeHTTP(w, r)
-	})
-}
-
-func corsMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		origin := os.Getenv("FRONTEND_URL")
-		if origin == "" {
-			origin = "http://127.0.0.1:3000"
-		}
-		
-		w.Header().Set("Access-Control-Allow-Origin", origin)
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-		w.Header().Set("Access-Control-Allow-Credentials", "true")
-
-		if r.Method == "OPTIONS" {
-			w.WriteHeader(http.StatusOK)
-			return
-		}
-
-		next.ServeHTTP(w, r)
-	})
-}
 
 func main() {
 	database.InitDB()
@@ -82,60 +19,60 @@ func main() {
 	mux := http.NewServeMux()
 
 	// Auth routes
-	mux.HandleFunc("/auth/spotify", enableCORS(auth.HandleSpotifyLogin))
-	mux.HandleFunc("/auth/spotify/callback", enableCORS(auth.HandleSpotifyCallback))
-	mux.HandleFunc("/auth/twitter", enableCORS(auth.HandleTwitterLogin))
-	mux.HandleFunc("/auth/twitter/callback", enableCORS(auth.HandleTwitterCallback))
-	mux.HandleFunc("/auth/logout", enableCORS(auth.HandleLogout))
-	mux.HandleFunc("/auth/me", enableCORS(auth.HandleGetCurrentUser))
-	mux.HandleFunc("/auth/profile", enableCORS(auth.HandleUpdateProfile))
+	mux.HandleFunc("/auth/spotify", auth.HandleSpotifyLogin)
+	mux.HandleFunc("/auth/spotify/callback", auth.HandleSpotifyCallback)
+	mux.HandleFunc("/auth/twitter", auth.HandleTwitterLogin)
+	mux.HandleFunc("/auth/twitter/callback", auth.HandleTwitterCallback)
+	mux.HandleFunc("/auth/logout", auth.HandleLogout)
+	mux.HandleFunc("/auth/me", auth.HandleGetCurrentUser)
+	mux.HandleFunc("/auth/profile", auth.HandleUpdateProfile)
 	
 	// Upload routes
-	mux.HandleFunc("/api/upload/image", enableCORS(handlers.UploadImage))
+	mux.HandleFunc("/api/upload/image", handlers.UploadImage)
 	
 	// Twitter integration routes
-	mux.HandleFunc("/api/twitter/check", enableCORS(handlers.CheckTwitterConnection))
-	mux.HandleFunc("/api/twitter/disconnect", enableCORS(handlers.DisconnectTwitter))
+	mux.HandleFunc("/api/twitter/check", handlers.CheckTwitterConnection)
+	mux.HandleFunc("/api/twitter/disconnect", handlers.DisconnectTwitter)
 	
 	// Static file serving for uploads
 	fs := http.FileServer(http.Dir("./uploads"))
-	mux.Handle("/uploads/", enableCORSForFileServer(http.StripPrefix("/uploads/", fs)))
+	mux.Handle("/uploads/", http.StripPrefix("/uploads/", fs))
 	
 	// API routes
-	mux.HandleFunc("/api/posts", enableCORS(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == "GET" {
+	mux.HandleFunc("/api/posts", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case "GET":
 			handlers.GetPosts(w, r)
-		} else if r.Method == "POST" {
+		case "POST":
 			handlers.CreatePost(w, r)
-		} else {
+		default:
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
-	}))
+	})
 
-	mux.HandleFunc("/api/posts/", enableCORS(func(w http.ResponseWriter, r *http.Request) {
-		// Dispatch based on path suffix
-		// Expected: /api/posts/{id}/like, /api/posts/{id}/reply, /api/posts/{id}/replies
+	mux.HandleFunc("/api/posts/", func(w http.ResponseWriter, r *http.Request) {
 		path := r.URL.Path
-		if strings.HasSuffix(path, "/like") && r.Method == "POST" {
+		switch {
+		case strings.HasSuffix(path, "/like") && r.Method == "POST":
 			handlers.ToggleLike(w, r)
-		} else if strings.HasSuffix(path, "/reply") && r.Method == "POST" {
+		case strings.HasSuffix(path, "/reply") && r.Method == "POST":
 			handlers.CreateReply(w, r)
-		} else if strings.HasSuffix(path, "/replies") && r.Method == "GET" {
+		case strings.HasSuffix(path, "/replies") && r.Method == "GET":
 			handlers.GetReplies(w, r)
-		} else {
+		default:
 			http.NotFound(w, r)
 		}
-	}))
+	})
 
-	mux.HandleFunc("/api/search/posts", enableCORS(handlers.SearchPosts))
-	mux.HandleFunc("/api/search/users", enableCORS(handlers.SearchUsers))
+	mux.HandleFunc("/api/search/posts", handlers.SearchPosts)
+	mux.HandleFunc("/api/search/users", handlers.SearchUsers)
 
-	mux.HandleFunc("/health", enableCORS(func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "OK")
-	}))
+	})
 
 	fmt.Println("Server starting on :8080")
-	if err := http.ListenAndServe(":8080", corsMiddleware(mux)); err != nil {
+	if err := http.ListenAndServe(":8080", middleware.CORS(mux)); err != nil {
 		log.Fatal(err)
 	}
 }
