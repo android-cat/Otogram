@@ -11,9 +11,10 @@ import AppleMusicPlayer from '@/shared/ui/AppleMusicPlayer';
 
 interface PostCardProps {
     post: Post;
+    onTagClick?: (tag: string) => void;
 }
 
-export const PostCard: React.FC<PostCardProps> = ({ post }) => {
+export const PostCard: React.FC<PostCardProps> = ({ post, onTagClick }) => {
     const { currentUser } = useAuth();
     const [isLiked, setIsLiked] = useState(post.liked_by_current_user);
     const [likeCount, setLikeCount] = useState(post.like_count);
@@ -92,9 +93,13 @@ export const PostCard: React.FC<PostCardProps> = ({ post }) => {
             {post.tags && post.tags.length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-4">
                     {post.tags.map((tag, i) => (
-                        <span key={i} className="px-2 py-1 bg-gray-200 dark:bg-zinc-700 rounded-full text-xs text-gray-700 dark:text-gray-300">
+                        <button
+                            key={i}
+                            onClick={() => onTagClick?.(tag)}
+                            className="px-2 py-1 bg-gray-200 dark:bg-zinc-700 rounded-full text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-zinc-600 transition cursor-pointer"
+                        >
                             #{tag}
-                        </span>
+                        </button>
                     ))}
                 </div>
             )}

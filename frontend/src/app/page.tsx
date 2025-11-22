@@ -66,6 +66,14 @@ export default function Home() {
         fetchPosts();
     };
 
+    const handleTagClick = (tag: string) => {
+        setSearchQuery(tag);
+        setSearchType('tag');
+        setActiveSearch(tag);
+        setActiveSearchType('tag');
+        fetchPosts(tag, 'tag');
+    };
+
     return (
         <main className="flex min-h-screen flex-col items-center p-8 pt-24">
             <div className="w-full max-w-2xl space-y-8">
@@ -136,7 +144,7 @@ export default function Home() {
                     <p className="text-center text-gray-500">No posts found.</p>
                 ) : (
                     posts.map((post) => (
-                        <PostCard key={post.id} post={post} />
+                        <PostCard key={post.id} post={post} onTagClick={handleTagClick} />
                     ))
                 )}
             </div>

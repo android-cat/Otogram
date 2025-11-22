@@ -60,7 +60,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ searchQuery, setSearchQuer
                 <input
                     type="text"
                     placeholder={`Search ${searchType === 'all' ? 'all fields' : searchType}...`}
-                    className="w-full p-4 pl-12 pr-12 rounded-full border border-gray-300 dark:border-zinc-700 dark:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-full p-4 pl-12 pr-12 rounded-full border border-gray-300 dark:border-zinc-700 dark:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                 />
