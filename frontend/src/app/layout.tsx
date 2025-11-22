@@ -9,6 +9,10 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
     title: "Otogram - Music SNS",
     description: "Share your favorite music",
+    icons: {
+        icon: '/icon.svg',
+        apple: '/apple-icon.svg',
+    },
 };
 
 export default function RootLayout({

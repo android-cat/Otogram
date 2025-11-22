@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Reply } from '@/shared/types';
-import { API_BASE_URL } from '@/shared/config';
+import { API_BASE_URL, DEFAULT_AVATAR_URL } from '@/shared/config';
 
 interface ReplyListProps {
     postId: number;
@@ -43,7 +43,7 @@ export const ReplyList: React.FC<ReplyListProps> = ({ postId, refreshTrigger }) 
             {replies.map((reply) => (
                 <div key={reply.id} className="flex space-x-3">
                     <img
-                        src={reply.user?.profile_image || 'https://via.placeholder.com/40'}
+                        src={reply.user?.profile_image || DEFAULT_AVATAR_URL}
                         alt={reply.user?.display_name}
                         className="w-8 h-8 rounded-full object-cover"
                     />
@@ -51,7 +51,7 @@ export const ReplyList: React.FC<ReplyListProps> = ({ postId, refreshTrigger }) 
                         <div className="flex justify-between items-start mb-1">
                             <span className="font-bold text-sm dark:text-white">{reply.user?.display_name}</span>
                             <span className="text-xs text-gray-500">
-                                {new Date(reply.created_at).toLocaleDateString()}
+                                {new Date(reply.created_at).toLocaleString(undefined, { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
                             </span>
                         </div>
                         <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{reply.content}</p>

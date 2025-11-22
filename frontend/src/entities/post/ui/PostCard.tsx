@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { Post } from '@/shared/types';
 import { useAuth } from '@/shared/contexts/AuthContext';
-import { API_BASE_URL } from '@/shared/config';
+import { API_BASE_URL, DEFAULT_AVATAR_URL } from '@/shared/config';
 import { ReplyModal } from '@/features/reply/ui/ReplyModal';
 import { ReplyList } from '@/features/reply/ui/ReplyList';
 import SpotifyPlayer from '@/shared/ui/SpotifyPlayer';
@@ -55,15 +55,15 @@ export const PostCard: React.FC<PostCardProps> = ({ post }) => {
 
     return (
         <div className="bg-white dark:bg-zinc-800 p-6 rounded-xl shadow-md">
-            <Link href={`/users?user_id=${post.user?.id || 1}`} className="flex items-center mb-4 hover:opacity-80 transition cursor-pointer">
-                {post.user?.profile_image ? (
-                    <img src={post.user.profile_image} alt={post.user.display_name} className="w-10 h-10 rounded-full mr-3" />
-                ) : (
-                    <div className="w-10 h-10 bg-gray-300 rounded-full mr-3"></div>
-                )}
+            <Link href={`/users?user_id=${post.user?.id}`} className="flex items-center mb-4 hover:opacity-80 transition">
+                <img 
+                    src={post.user?.profile_image || DEFAULT_AVATAR_URL} 
+                    alt={post.user?.display_name || 'User'} 
+                    className="w-10 h-10 rounded-full mr-3 object-cover"
+                />
                 <div>
                     <p className="font-semibold">{post.user?.display_name || 'Unknown User'}</p>
-                    <p className="text-sm text-gray-500">{new Date(post.created_at).toLocaleString()}</p>
+                    <p className="text-sm text-gray-500">{new Date(post.created_at).toLocaleString(undefined, { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</p>
                 </div>
             </Link>
 

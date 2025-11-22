@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useAuth } from '@/shared/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import { DEFAULT_AVATAR_URL } from '@/shared/config'
 
 export const Header = () => {
     const { currentUser, isLoading, logout } = useAuth()
@@ -31,15 +32,11 @@ export const Header = () => {
                                 onClick={() => setShowMenu(!showMenu)}
                                 className="flex items-center gap-2 hover:opacity-80 transition"
                             >
-                                {currentUser.profile_image ? (
-                                    <img
-                                        src={currentUser.profile_image}
-                                        alt={currentUser.display_name}
-                                        className="w-8 h-8 rounded-full"
-                                    />
-                                ) : (
-                                    <div className="w-8 h-8 bg-gray-300 dark:bg-zinc-600 rounded-full"></div>
-                                )}
+                                <img
+                                    src={currentUser.profile_image || DEFAULT_AVATAR_URL}
+                                    alt={currentUser.display_name}
+                                    className="w-8 h-8 rounded-full object-cover"
+                                />
                                 <span className="text-sm font-medium">{currentUser.display_name}</span>
                             </button>
                             

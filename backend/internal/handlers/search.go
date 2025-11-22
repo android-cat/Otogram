@@ -11,7 +11,6 @@ import (
 
 func SearchPosts(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	query := r.URL.Query().Get("q")
 	if query == "" {
@@ -56,7 +55,6 @@ func SearchPosts(w http.ResponseWriter, r *http.Request) {
 
 func SearchUsers(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	query := r.URL.Query().Get("q")
 

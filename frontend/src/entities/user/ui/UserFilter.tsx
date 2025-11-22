@@ -1,5 +1,6 @@
 import React from 'react'
 import { UserSummary } from '../types'
+import { DEFAULT_AVATAR_URL } from '@/shared/config'
 
 interface UserFilterProps {
     users: UserSummary[]
@@ -36,11 +37,11 @@ export const UserFilter: React.FC<UserFilterProps> = ({ users, activeUserId, onS
                         }`}
                         onClick={() => onSelectUser(user.id)}
                     >
-                        {user.profile_image ? (
-                            <img src={user.profile_image} alt={user.display_name} className="w-5 h-5 rounded-full" />
-                        ) : (
-                            <span className="w-5 h-5 rounded-full bg-gray-300 dark:bg-zinc-600" />
-                        )}
+                        <img 
+                            src={user.profile_image || DEFAULT_AVATAR_URL} 
+                            alt={user.display_name} 
+                            className="w-5 h-5 rounded-full object-cover" 
+                        />
                         <span>{user.display_name}</span>
                     </button>
                 ))}

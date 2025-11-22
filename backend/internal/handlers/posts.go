@@ -15,7 +15,6 @@ import (
 
 func GetPosts(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	// Get current user ID if logged in (use NULL-safe value)
 	var currentUserID *int

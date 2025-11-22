@@ -7,7 +7,7 @@ import { PostCard } from '@/entities/post/ui/PostCard'
 import { usePosts } from '@/widgets/feed/hooks/usePosts'
 import { useAuth } from '@/shared/contexts/AuthContext'
 import { UserProfile } from '@/entities/user/types'
-import { API_BASE_URL } from '@/shared/config'
+import { API_BASE_URL, DEFAULT_AVATAR_URL } from '@/shared/config'
 
 function UsersFeedContent() {
     const { posts, loading: postsLoading, error, filterByUser } = usePosts()
@@ -148,23 +148,11 @@ function UsersFeedContent() {
                         {/* Profile Info */}
                         <div className="px-6 pb-6">
                             <div className="flex items-end gap-4 -mt-16 mb-4">
-                                {isEditing ? (
-                                    <div className="w-32 h-32 rounded-full border-4 border-white dark:border-zinc-800 bg-gray-300 dark:bg-zinc-600 shadow-lg flex items-center justify-center overflow-hidden">
-                                        {editForm.profile_image ? (
-                                            <img src={editForm.profile_image} alt="Preview" className="w-full h-full object-cover" />
-                                        ) : (
-                                            <span className="text-gray-500 text-xs">No Image</span>
-                                        )}
-                                    </div>
-                                ) : displayUser.profile_image ? (
-                                    <img
-                                        src={displayUser.profile_image}
-                                        alt={displayUser.display_name}
-                                        className="w-32 h-32 rounded-full border-4 border-white dark:border-zinc-800 shadow-lg"
-                                    />
-                                ) : (
-                                    <div className="w-32 h-32 rounded-full border-4 border-white dark:border-zinc-800 bg-gray-300 dark:bg-zinc-600 shadow-lg"></div>
-                                )}
+                                <img
+                                    src={isEditing ? (editForm.profile_image || DEFAULT_AVATAR_URL) : (displayUser.profile_image || DEFAULT_AVATAR_URL)}
+                                    alt={isEditing ? "Preview" : displayUser.display_name}
+                                    className="w-32 h-32 rounded-full border-4 border-white dark:border-zinc-800 shadow-lg object-cover"
+                                />
                                 
                                 {isOwnProfile && !isEditing && (
                                     <button
@@ -247,9 +235,6 @@ function UsersFeedContent() {
                                 <div className="space-y-3">
                                     <div>
                                         <h1 className="text-3xl font-bold">{displayUser.display_name}</h1>
-                                        {isOwnProfile && (
-                                            <p className="text-sm text-gray-500 dark:text-gray-400">@you</p>
-                                        )}
                                     </div>
                                     
                                     {displayUser.bio && (
