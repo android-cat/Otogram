@@ -12,16 +12,25 @@ import { API_BASE_URL } from '@/shared/config';
 export default function Home() {
     const [posts, setPosts] = useState<Post[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
+    const [searchType, setSearchType] = useState('all');
     const [loading, setLoading] = useState(true);
+    const [isSearching, setIsSearching] = useState(false);
     const [isFormOpen, setIsFormOpen] = useState(false);
+    const [activeSearch, setActiveSearch] = useState(''); // 実際に検索実行されたワード
+    const [activeSearchType, setActiveSearchType] = useState('all'); // 実際に検索実行されたタイプ
 
     const { currentUser } = useAuth();
 
-    const fetchPosts = async (query: string = '') => {
-        setLoading(true);
+    const fetchPosts = async (query: string = '', type: string = 'all') => {
+        if (query) {
+            setIsSearching(true);
+        } else {
+            setLoading(true);
+        }
+        
         try {
             const endpoint = query
-                ? `${API_BASE_URL}/api/search/posts?q=${encodeURIComponent(query)}`
+                ? `${API_BASE_URL}/api/search/posts?q=${encodeURIComponent(query)}&type=${type}`
                 : `${API_BASE_URL}/api/posts`;
 
             const res = await fetch(endpoint, {
@@ -35,6 +44,7 @@ export default function Home() {
             setPosts([]);
         } finally {
             setLoading(false);
+            setIsSearching(false);
         }
     };
 
@@ -44,11 +54,15 @@ export default function Home() {
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
-        fetchPosts(searchQuery);
+        setActiveSearch(searchQuery);
+        setActiveSearchType(searchType);
+        fetchPosts(searchQuery, searchType);
     };
 
     const handlePostCreated = () => {
         setIsFormOpen(false);
+        setActiveSearch('');
+        setActiveSearchType('all');
         fetchPosts();
     };
 
@@ -64,7 +78,10 @@ export default function Home() {
                 <SearchBar
                     searchQuery={searchQuery}
                     setSearchQuery={setSearchQuery}
+                    searchType={searchType}
+                    setSearchType={setSearchType}
                     onSearch={handleSearch}
+                    isSearching={isSearching}
                 />
 
                 <div className="w-full mb-8">
@@ -86,6 +103,32 @@ export default function Home() {
                         />
                     )}
                 </div>
+
+                {activeSearch && (
+                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                                <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                            <p className="text-blue-800 dark:text-blue-200 font-medium">
+                                Showing results for <span className="font-bold">"{activeSearch}"</span>
+                                {activeSearchType !== 'all' && <span className="text-sm ml-1">(in {activeSearchType})</span>}
+                            </p>
+                        </div>
+                        <button
+                            onClick={() => {
+                                setSearchQuery('');
+                                setSearchType('all');
+                                setActiveSearch('');
+                                setActiveSearchType('all');
+                                fetchPosts();
+                            }}
+                            className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm font-medium"
+                        >
+                            Clear search
+                        </button>
+                    </div>
+                )}
 
                 {loading ? (
                     <p className="text-center text-gray-500">Loading...</p>
