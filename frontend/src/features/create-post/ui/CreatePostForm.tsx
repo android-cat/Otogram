@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '@/shared/config';
 
 interface CreatePostFormProps {
     onPostCreated: () => void;
@@ -10,6 +11,8 @@ export const CreatePostForm: React.FC<CreatePostFormProps> = ({ onPostCreated, o
     const [newPostComment, setNewPostComment] = useState('');
     const [newPostTags, setNewPostTags] = useState('');
     const [newPostUrl, setNewPostUrl] = useState('');
+    const [postToTwitter, setPostToTwitter] = useState(false);
+    const [twitterConnected, setTwitterConnected] = useState(false);
 
     const parseUrl = (url: string): { type: 'spotify' | 'youtube' | 'applemusic' | 'other', id: string } => {
         // Spotify - handle URLs like open.spotify.com/intl-ja/track/ID or open.spotify.com/track/ID?si=...
@@ -46,14 +49,16 @@ export const CreatePostForm: React.FC<CreatePostFormProps> = ({ onPostCreated, o
             tags: tagsArray,
             song_id: id,
             song_type: type,
+            post_to_twitter: postToTwitter,
         };
 
         try {
-            const res = await fetch('http://localhost:8080/api/posts', {
+            const res = await fetch(`${API_BASE_URL}/api/posts`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
+                credentials: 'include',
                 body: JSON.stringify(newPost),
             });
 
@@ -119,6 +124,21 @@ export const CreatePostForm: React.FC<CreatePostFormProps> = ({ onPostCreated, o
                     onChange={(e) => setNewPostTags(e.target.value)}
                 />
             </div>
+
+            {twitterConnected && (
+                <div className="flex items-center space-x-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <input
+                        type="checkbox"
+                        id="postToTwitter"
+                        checked={postToTwitter}
+                        onChange={(e) => setPostToTwitter(e.target.checked)}
+                        className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                    />
+                    <label htmlFor="postToTwitter" className="text-sm font-medium cursor-pointer">
+                        Post to X (Twitter)
+                    </label>
+                </div>
+            )}
 
             <div className="flex justify-end space-x-3 pt-4">
                 <button

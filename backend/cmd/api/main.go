@@ -69,6 +69,10 @@ func main() {
 	// Upload routes
 	http.HandleFunc("/api/upload/image", enableCORS(handlers.UploadImage))
 	
+	// Twitter integration routes
+	http.HandleFunc("/api/twitter/check", enableCORS(handlers.CheckTwitterConnection))
+	http.HandleFunc("/api/twitter/disconnect", enableCORS(handlers.DisconnectTwitter))
+	
 	// Static file serving for uploads
 	fs := http.FileServer(http.Dir("./uploads"))
 	http.Handle("/uploads/", enableCORSForFileServer(http.StripPrefix("/uploads/", fs)))

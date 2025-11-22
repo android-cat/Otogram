@@ -2,11 +2,13 @@ package handlers
 
 import (
 	"database/sql"
+	"backend/internal/auth"
 	"backend/internal/database"
 	"backend/internal/models"
 	"encoding/json"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 )
 
@@ -62,32 +64,68 @@ func GetPosts(w http.ResponseWriter, r *http.Request) {
 func CreatePost(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var p models.Post
-	if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
+	// Parse request body
+	var request struct {
+		models.Post
+		PostToTwitter bool `json:"post_to_twitter"`
+	}
+	
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
+	// Get user from session
+	session, err := auth.Store.Get(r, auth.GetSessionCookieName())
+	if err != nil {
+		log.Println("Session error:", err)
+		http.Error(w, "Invalid session", http.StatusUnauthorized)
+		return
+	}
+
+	userID, ok := session.Values["user_id"].(int)
+	if !ok {
+		log.Println("No user_id in session")
+		http.Error(w, "Not authenticated", http.StatusUnauthorized)
+		return
+	}
+
 	// Validation
-	if len(p.Tags) > 10 {
+	if len(request.Tags) > 10 {
 		http.Error(w, "Too many tags (max 10)", http.StatusBadRequest)
 		return
 	}
 
-	// Hardcoded user_id for demo
-	userID := 1 
-
-	err := database.DB.QueryRow(`
+	// Insert post into database
+	err = database.DB.QueryRow(`
 		INSERT INTO posts (user_id, title, song_id, song_type, comment, tags)
 		VALUES ($1, $2, $3, $4, $5, $6)
 		RETURNING id, created_at
-	`, userID, p.Title, p.SongID, p.SongType, p.Comment, p.Tags).Scan(&p.ID, &p.CreatedAt)
+	`, userID, request.Title, request.SongID, request.SongType, request.Comment, request.Tags).Scan(&request.Post.ID, &request.Post.CreatedAt)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	json.NewEncoder(w).Encode(p)
+	// Post to Twitter if requested
+	if request.PostToTwitter {
+		frontendURL := os.Getenv("FRONTEND_URL")
+		if frontendURL == "" {
+			frontendURL = "http://127.0.0.1:3000"
+		}
+		postURL := frontendURL + "/?post_id=" + strconv.Itoa(request.Post.ID)
+		
+		go func() {
+			if err := PostToTwitter(userID, request.Comment, postURL); err != nil {
+				log.Printf("Failed to post to Twitter: %v", err)
+			} else {
+				log.Printf("Successfully posted to Twitter for post ID %d", request.Post.ID)
+			}
+		}()
+	}
+
+	request.Post.UserID = userID
+	json.NewEncoder(w).Encode(request.Post)
 }
 

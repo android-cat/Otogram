@@ -20,6 +20,18 @@ CREATE TABLE IF NOT EXISTS posts (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS oauth_tokens (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    provider VARCHAR(50) NOT NULL,
+    access_token TEXT NOT NULL,
+    refresh_token TEXT,
+    expires_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, provider)
+);
+
 INSERT INTO users (id, oauth_id, oauth_provider, display_name, profile_image, bio) 
 VALUES (1, 'demo_user', 'demo', 'Demo User', 'https://via.placeholder.com/150', '音楽が大好きです！')
 ON CONFLICT (oauth_id, oauth_provider) DO NOTHING;

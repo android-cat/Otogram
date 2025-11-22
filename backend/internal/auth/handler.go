@@ -160,6 +160,16 @@ func HandleTwitterCallback(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("User created/updated: ID=%d, DisplayName=%s", user.ID, user.DisplayName)
 
+	// Save OAuth token for Twitter
+	expiresAt := time.Now().Add(2 * time.Hour) // Twitter tokens typically expire in 2 hours
+	if !token.Expiry.IsZero() {
+		expiresAt = token.Expiry
+	}
+	if err := SaveOAuthToken(user.ID, "twitter", token.AccessToken, token.RefreshToken, expiresAt); err != nil {
+		log.Println("Warning: Failed to save Twitter OAuth token:", err)
+		// Continue anyway as this is not critical for initial login
+	}
+
 	// Create session
 	if err := createSession(w, r, user); err != nil {
 		log.Println("Failed to create session:", err)
